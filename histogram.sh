@@ -1,6 +1,20 @@
 #! /bin/bash
 
-for x in $(find $1 -maxdepth 1 -not -type d) #prendo i percorsi dei file nella directoruy specificata (escludo le altre directory)
+#Faccio il parse delle opzioni con getopt
+ARG=`getopt s: "$@"`
+eval set -- "$ARG"
+
+case "$1" in
+	-s)	list=$(find $2 -not -type d) #prendo tutti i file compresi quelli nelle subdirectory
+		;;
+	--)	list=$(find $2 -maxdepth 1 -not -type d) #prendo tutti i file che però non stanno nelle subdirectory
+		;;
+	*) 	echo "Unexpected error" 
+		exit 1
+		;;
+	esac
+
+for x in $list
 do
 	((size[`wc -c < ${x}`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
 done
@@ -12,5 +26,5 @@ do
 	do
 		echo -n "*"
 	done
-	echo "" #vado a capo
+	echo "" #a capo
 done
