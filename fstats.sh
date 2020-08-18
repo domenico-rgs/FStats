@@ -1,13 +1,15 @@
 #! /bin/bash
-string="find $2 -maxdepth 1 -not -type d"
+string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
+#array associativi per far corrispondere dimensione/data ai rispettivi incrementi
 declare -A size
+declare -A age
 
 data_histogram(){
 	OIFS="$IFS"
 	IFS=$'\n'
 	for x in $list
 	do
-		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
+		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file, il pipe con cut mi permette di prendere solo la dimensione senza il path
 	done
 	IFS="$OIFS"
 
@@ -19,21 +21,21 @@ age_histogram(){
 	IFS=$'\n'
 	for x in $list
 	do
-		date_file=`stat --format=%Y ${x}`
-		midnight_date=`date -d "$(date +%F) UTC 00:00:00" +%s`
+		date_file=`stat --format=%Y ${x}` #ottengo la data di ultima modifica del file con stat in secondi dal 1970
+		midnight_date=`date -d "$(date +%F) UTC 00:00:00" +%s` #prendo la data attuale a mezzanotte in secondi dal 1970
 		
 		if [[ $date_file -ge $midnight_date ]]; then #oggi
-			((age[0]++));
+			((age["oggi"]++));
 		elif [[ $date_file -ge $midnight_date-86400 && $date_file -lt $midnight_date ]]; then #ieri
-			((age[1]++));
+			((age["ieri"]++));
 		elif [[ $date_file -ge $midnight_date-604800 &&  $date_file -lt $midnight_date-86400 ]]; then #ultimi 7 giorni
-			((age[2]++));
+			((age["ultima settimana"]++));
 		elif [[ $date_file -ge $midnight_date-18144000 && $date_file -lt $midnight_date-604800 ]]; then #ultimi 30 giorni
-			((age[3]++));
+			((age["ultimo mese"]++));
 		elif [[ $date_file -ge $midnight_date-31536000 && $date_file -ge $midnight_date-18144000 ]]; then #ultimo anno
-			((age[4]++));
+			((age["ultimo anno"]++));
 		else #vecchio
-			((age[5]++));
+			((age["vecchi"]++));
 		fi
 	done
 	IFS="$OIFS"
@@ -46,7 +48,7 @@ printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 	for x in ${!size[*]} #itero su tutti gli indici del vettore che sono stati creati
 	do
 		printf "%-15s |" "${x}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
-		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma con gli * corrispondenti al valore dell'elemento
+		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma
 		do
 			printf "\e[38;5;045m#\033[0m"
 		done
@@ -57,21 +59,23 @@ printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 
 #funzionamento uguale a print_data_histogram()
 print_age_histogram(){
-declare -a d_name=("oggi" "ieri" "ultima settimana" "ultimo mese" "ultimo anno" "vecchi")
 printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
+	OIFS="$IFS"
+	IFS=$'\n'
 	for x in ${!age[*]} 
 	do
-		printf "%-20s |" "${d_name[$x]}"
+		printf "%-20s |" "${x}"
 		for ((i=${age[$x]}; i>0; i--))
 		do
 			printf "\e[38;5;075m#\033[0m"
 		done
 		echo ""
 	done
+	IFS="$OIFS"
 	echo ""
 }
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
 	printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
 	list=`find $1 -maxdepth 1 -not -type d`
 	if [ -n "$list" ];then
@@ -82,14 +86,14 @@ if [ $# -lt 2 ]; then
 else
 	printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
 fi
-while getopts "Rsa:" opt; do
+while getopts "Rsa:" opt; do #itero fino a quando ho opzioni da eseguire
 list=`${string}`
-if [ -z "$list" ];then
+if [ -z "$list" ];then #se do come parametro una directory inesistente find segnala e si esce dallo script
 	exit 1;
 fi
 
       case ${opt} in
-      	R)	string="find $2 -not -type d" #con -R scansiono anche i file nelle sotto directory
+      	R)	string="find $2 -not -type d" #con -R scansiono anche i file nelle sotto directory, si presuppone che se specificata sia sempre la prima opzioni rispetto alle altre
       		;;
 	s)	data_histogram
 		;;
