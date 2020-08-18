@@ -1,6 +1,6 @@
 #! /bin/bash
-clear
 string="find $2 -maxdepth 1 -not -type d"
+declare -A size
 
 data_histogram(){
 	OIFS="$IFS"
@@ -8,7 +8,7 @@ data_histogram(){
 	for x in $list
 	do
 		if test -r ${x}; then 
-			((size[`wc -c < "${x}"`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
+			((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
 		else
 			echo "${x} non ha i permessi necessari - ignorato"
 		fi
@@ -46,14 +46,13 @@ age_histogram(){
 }
 
 print_data_histogram(){
-printf "\e[38;5;045mIstogramma dimensione\n**************\n\n\033[0m"
-
+printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 	for x in ${!size[*]} #itero su tutti gli indici del vettore che sono stati creati
 	do
-		printf "%-15s |" "${x} B" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
-		for((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma con gli * corrispondenti al valore dell'elemento
+		printf "%-15s |" "${x}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
+		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma con gli * corrispondenti al valore dell'elemento
 		do
-			printf "\e[38;5;045m*\033[0m"
+			printf "\e[38;5;045m#\033[0m"
 		done
 		echo "" #a capo
 	done
@@ -63,14 +62,13 @@ printf "\e[38;5;045mIstogramma dimensione\n**************\n\n\033[0m"
 #funzionamento uguale a print_data_histogram()
 print_age_histogram(){
 declare -a d_name=("oggi" "ieri" "ultima settimana" "ultimo mese" "ultimo anno" "vecchi")
-
-printf "\e[38;5;075mIstogramma ultima modifica\n*************\n\n\033[0m"
+printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
 	for x in ${!age[*]} 
 	do
 		printf "%-20s |" "${d_name[$x]}"
-		for((i=${age[$x]}; i>0; i--))
+		for ((i=${age[$x]}; i>0; i--))
 		do
-			printf "\e[38;5;075m*\033[0m"
+			printf "\e[38;5;075m#\033[0m"
 		done
 		echo ""
 	done
@@ -78,12 +76,15 @@ printf "\e[38;5;075mIstogramma ultima modifica\n*************\n\n\033[0m"
 }
 
 if [ $# -lt 2 ]; then
+	printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
 	list=`find $1 -maxdepth 1 -not -type d`
 	if [ -n "$list" ];then
 		data_histogram
 		age_histogram
 	fi
 	exit 0
+else
+	printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
 fi
 while getopts "Rsa:" opt; do
 list=`${string}`
