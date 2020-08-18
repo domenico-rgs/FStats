@@ -7,11 +7,7 @@ data_histogram(){
 	IFS=$'\n'
 	for x in $list
 	do
-		if test -r ${x}; then 
-			((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
-		else
-			echo "${x} non ha i permessi necessari - ignorato"
-		fi
+		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file -> file di 189K => size[189]++
 	done
 	IFS="$OIFS"
 
