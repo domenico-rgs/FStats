@@ -1,3 +1,12 @@
+########################################
+#		FSTATS		        #
+# Script per il disegno di istogrammi  #
+# relativi ai file di una directory    #
+#                                      #
+# Domenico Ragusa                      #
+# Deborah Tandurella                   #
+########################################
+
 #! /bin/bash
 string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
 #array associativi per far corrispondere dimensione/data ai rispettivi incrementi
@@ -5,11 +14,11 @@ declare -A size
 declare -A age
 
 data_histogram(){
-	OIFS="$IFS"
-	IFS=$'\n'
+	OIFS="$IFS" #backup IFS
+	IFS=$'\n' #cambio gli "internal field separator" settando solo l'andata a capo in modo da non avere problemi con gli spazi nei nomi dei file
 	for x in $list
 	do
-		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file, il pipe con cut mi permette di prendere solo la dimensione senza il path
+		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file, la pipe con cut mi permette di prendere solo la dimensione senza il path
 	done
 	IFS="$OIFS"
 
@@ -47,7 +56,7 @@ print_data_histogram(){
 printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 	for x in ${!size[*]} #itero su tutti gli indici del vettore che sono stati creati
 	do
-		printf "%-15s |" "${x}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
+		printf "%-10s |" "${x}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
 		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma
 		do
 			printf "\e[38;5;045m#\033[0m"
@@ -64,7 +73,7 @@ printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
 	IFS=$'\n'
 	for x in ${!age[*]} 
 	do
-		printf "%-20s |" "${x}"
+		printf "%-10s |" "${x}"
 		for ((i=${age[$x]}; i>0; i--))
 		do
 			printf "\e[38;5;075m#\033[0m"
@@ -75,20 +84,33 @@ printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
 	echo ""
 }
 
-if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
-	printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
-	list=`find $1 -maxdepth 1 -not -type d`
-	if [ -n "$list" ];then
-		data_histogram
-		age_histogram
+function usage {
+    echo "usage: $0 [-Rsah] [dir]"
+    echo "  -R      tiene conto anche dei file nelle subdirectory"
+    echo "  -s      stampa solo l'istogramma della dimensione dei file"
+    echo "  -a      stampa solo l'istogramma della data di ultima modifica dei file"
+    echo "  -h      mostra help"
+    echo "  dir     directory da analizzare"
+    exit 1
+}
+
+
+if [ $1 != "-h" ]; then
+	if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
+		printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
+		list=`find $1 -maxdepth 1 -not -type d`
+		if [ -n "$list" ];then
+			data_histogram
+			age_histogram
+		fi
+		exit 0
+	else
+		printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
 	fi
-	exit 0
-else
-	printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
 fi
-while getopts "Rsa:" opt; do #itero fino a quando ho opzioni da eseguire
+while getopts "Rsa:h" opt; do #itero fino a quando ho opzioni da eseguire
 list=`${string}`
-if [ -z "$list" ];then #se do come parametro una directory inesistente find segnala e si esce dallo script
+if [ -z "$list" ];then #se do come parametro una directory inesistente il comando find segnala e si esce dallo script
 	exit 1;
 fi
 
@@ -98,16 +120,12 @@ fi
 	s)	data_histogram
 		;;
 	a)	age_histogram
-		;;	
-	\? )	echo "Opzione non valida: -$OPTARG" 1>&2
-          	exit 1
-          	;;
-        : )	echo "Opzione non valida: -$OPTARG richiede un argomento" 1>&2
-          	exit 1
+		;;
+	h | \? | : )	usage
           	;;
         *)	echo "Errore interno!"
-     		exit 1
-    		 ;;
+        	usage
+    		;;
     esac
 done
 shift $((OPTIND - 1))

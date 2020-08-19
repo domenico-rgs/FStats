@@ -12,13 +12,17 @@ $ chmod +x fstats.sh
 
 per avviarlo 
 ```
-$ ./fstats.sh -R <recursive> -s <data histogram> -a <age histogram> dir
+$ ./fstats.sh -R <recursive> -s <data histogram> -a <age histogram> (-h <help>) dir
 ```
 
 ### Opzioni
 * -R: tiene conto anche dei file nelle subdirectory
 * -s: stampa solo l'istogramma della dimensione dei file
 * -a: stampa solo l'istogramma della data di ultima modifica dei file
+* -h: mostra help
 
-le tre opzioni possono essere combinate insieme.
+le prime tre opzioni possono essere combinate insieme.
 Se non specificate di default lo script stampa entrambi gli istogrammi, senza tener conto delle subdirectory, dei file in . oppure nella dir specificata come primo argomento
+
+## Requisiti
+Script testato su Ubuntu 20.04.1, gnome-shell 3.36.1 e bash 5.0.17
