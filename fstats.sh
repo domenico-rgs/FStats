@@ -1,34 +1,27 @@
-########################################
-#		FSTATS		        #
-# Script per il disegno di istogrammi  #
-# relativi ai file di una directory    #
-#                                      #
-# Domenico Ragusa                      #
-# Deborah Tandurella                   #
-########################################
-
 #! /bin/bash
-string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
+OIFS="$IFS" #backup IFS
 #array associativi per far corrispondere dimensione/data ai rispettivi incrementi
 declare -A size
 declare -A age
 
 data_histogram(){
-	OIFS="$IFS" #backup IFS
-	IFS=$'\n' #cambio gli "internal field separator" settando solo l'andata a capo in modo da non avere problemi con gli spazi nei nomi dei file
-	for x in $list
+IFS=$'\n' #cambio gli "internal field separator" settando solo l'andata a capo in modo da non avere problemi con gli spazi nei nomi dei file
+for x in $list
 	do
 		((size[`du -h "${x}" | cut -f1`]++)); #incremento il vettore in corrispondenza della dimensione del file, la pipe con cut mi permette di prendere solo la dimensione senza il path
 	done
-	IFS="$OIFS"
+IFS="$OIFS"
 
-	print_data_histogram
+print_data_histogram
 }
 
 age_histogram(){
-	OIFS="$IFS"
-	IFS=$'\n'
-	for x in $list
+IFS=$'\n'
+
+#inizializzo vettore associativo così non ho problemi con la stampa
+age["oggi"]=0; age["ieri"]=0; age["ultima settimana"]=0; age["ultimo mese"]=0; age["ultimo anno"]=0; age["vecchi"]=0;
+
+for x in $list
 	do
 		date_file=`stat --format=%Y ${x}` #ottengo la data di ultima modifica del file con stat in secondi dal 1970
 		midnight_date=`date -d "$(date +%F) UTC 00:00:00" +%s` #prendo la data attuale a mezzanotte in secondi dal 1970
@@ -41,52 +34,53 @@ age_histogram(){
 			((age["ultima settimana"]++));
 		elif [[ $date_file -ge $midnight_date-18144000 && $date_file -lt $midnight_date-604800 ]]; then #ultimi 30 giorni
 			((age["ultimo mese"]++));
-		elif [[ $date_file -ge $midnight_date-31536000 && $date_file -ge $midnight_date-18144000 ]]; then #ultimo anno
+		elif [[ $date_file -ge $midnight_date-31536000 && $date_file -lt $midnight_date-18144000 ]]; then #ultimo anno
 			((age["ultimo anno"]++));
 		else #vecchio
 			((age["vecchi"]++));
 		fi
 	done
-	IFS="$OIFS"
+IFS="$OIFS"
 	
-	print_age_histogram
+print_age_histogram
 }
 
 print_data_histogram(){
 printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
-	for x in ${!size[*]} #itero su tutti gli indici del vettore che sono stati creati
+
+for x in  `echo ${!size[*]} | tr ' ' '\n' | sort -n | tr '\n' ' '` #itero su tutti gli indici del vettore che sono stati creati
 	do
-		printf "%-10s |" "${x}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
+		printf "%-10s %-4s|" "${x}" "${size[$x]}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
 		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma
 		do
 			printf "\e[38;5;045m#\033[0m"
-		done
+		done 
 		echo "" #a capo
 	done
-	echo ""
+echo ""
 }
 
 #funzionamento uguale a print_data_histogram()
 print_age_histogram(){
+IFS=$'\n'
+declare -a t=("oggi" "ieri" "ultima settimana" "ultimo mese" "ultimo anno" "vecchi")
 printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
-	OIFS="$IFS"
-	IFS=$'\n'
-	for x in ${!age[*]} 
+for x in "${t[@]}"
 	do
-		printf "%-10s |" "${x}"
+		printf "%-18s %-4s|" "${x}" "${age[$x]}"
 		for ((i=${age[$x]}; i>0; i--))
 		do
 			printf "\e[38;5;075m#\033[0m"
 		done
 		echo ""
 	done
-	IFS="$OIFS"
-	echo ""
+echo ""
+IFS="$OIFS"
 }
 
 function usage {
     echo "usage: $0 [-Rsah] [dir]"
-    echo "  -R      tiene conto anche dei file nelle subdirectory"
+    echo "  -R      tiene conto anche dei file nelle subdirectory (da usare insieme a -s e/o -a)"
     echo "  -s      stampa solo l'istogramma della dimensione dei file"
     echo "  -a      stampa solo l'istogramma della data di ultima modifica dei file"
     echo "  -h      mostra help"
@@ -95,7 +89,9 @@ function usage {
 }
 
 
-if [ $1 != "-h" ]; then
+IFS=$'\n'
+string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
+if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di default
 	if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
 		printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
 		list=`find $1 -maxdepth 1 -not -type d`
@@ -108,6 +104,8 @@ if [ $1 != "-h" ]; then
 		printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
 	fi
 fi
+IFS="$OIFS"
+
 while getopts "Rsa:h" opt; do #itero fino a quando ho opzioni da eseguire
 list=`${string}`
 if [ -z "$list" ];then #se do come parametro una directory inesistente il comando find segnala e si esce dallo script
