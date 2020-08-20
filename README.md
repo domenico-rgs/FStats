@@ -16,7 +16,7 @@ $ ./fstats.sh -R <recursive> -s <data histogram> -a <age histogram> (-h <help>) 
 ```
 
 ### Opzioni
-* -R: tiene conto anche dei file nelle subdirectory
+* -R: tiene conto anche dei file nelle subdirectory (da usare insieme a -s e/o -a)
 * -s: stampa solo l'istogramma della dimensione dei file
 * -a: stampa solo l'istogramma della data di ultima modifica dei file
 * -h: mostra help
