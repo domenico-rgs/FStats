@@ -96,7 +96,7 @@ list=`find $2 -maxdepth 1 -not -type d`
 string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
 if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di default
 	if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
-		printf "\e[38;5;045mAnalisi di $1\n\n\033[0m"
+		printf "\e[38;5;045mAnalisi di `realpath $1`\n\n\033[0m"
 		list=`find $1 -maxdepth 1 -not -type d`
 		if [ -n "$list" ];then
 			data_histogram
@@ -104,7 +104,7 @@ if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di
 		fi
 		exit 0
 	else
-		printf "\e[38;5;045mAnalisi di $2\n\n\033[0m"
+		printf "\e[38;5;045mAnalisi di `realpath $2`\n\n\033[0m"
 	fi
 fi
 IFS="$OIFS"
