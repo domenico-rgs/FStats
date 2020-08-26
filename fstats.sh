@@ -48,7 +48,7 @@ print_age_histogram
 print_data_histogram(){
 printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 printf "%-10s %-4s\n" "Dimensione" "Num."
-for x in  `echo ${!size[*]} | tr ' ' '\n' | sort -n | tr '\n' ' '` #itero su tutti gli indici del vettore che sono stati creati
+for x in  `echo ${!size[*]} | tr ' ' '\n' | sort -n | tr '\n' ' '` #itero su tutti gli indici del vettore che sono stati creati ordinando per dimensione crescente
 	do
 		printf "%-10s %-4s|" "${x}" "${size[$x]}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
 		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma
@@ -64,7 +64,7 @@ echo ""
 print_age_histogram(){
 IFS=$'\n'
 declare -a t=("oggi" "ieri" "ultima settimana" "ultimo mese" "ultimo anno" "vecchi")
-printf "\e[38;5;045mAnalisi data ultima modifica\n\033[0m"
+printf "\e[38;5;075mAnalisi data ultima modifica\n\033[0m"
 printf "%-18s %-4s\n" "Ultima mod." "Num."
 for x in "${t[@]}"
 	do
@@ -91,9 +91,6 @@ function usage {
 
 
 IFS=$'\n'
-list=`find $2 -maxdepth 1 -not -type d`
-
-string="find $2 -maxdepth 1 -not -type d" #di default se non si sceglie opzione -R (recursive)
 if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di default
 	if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
 		printf "\e[38;5;045mAnalisi di `realpath $1`\n\n\033[0m"
@@ -107,8 +104,8 @@ if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di
 		printf "\e[38;5;045mAnalisi di `realpath $2`\n\n\033[0m"
 	fi
 fi
+list=`find $2 -maxdepth 1 -not -type d` #di default se non si sceglie opzione -R (recursive)
 IFS="$OIFS"
-
 while getopts "Rsa:h" opt; do #itero fino a quando ho opzioni da eseguire
 if [ -z "$list" ];then #se do come parametro una directory inesistente il comando find segnala e si esce dallo script
 	exit 1;
