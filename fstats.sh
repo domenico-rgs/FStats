@@ -91,11 +91,14 @@ function usage {
 
 
 IFS=$'\n'
-if [ $1 != "-h" ]; then #caso in cui non metto alcuna opzione - comportamento di default
+if [ $# -eq 0 ]; then 
+	usage
+fi
+if [ $1 != "-h" ]; then #se specifico di volere l'help salto avanti al getopts altrimenti mi comporto come se non avessi opzioni
 	if [ $# -lt 2 ]; then #se non sono specificate opzioni stampo entrambi i tipi di istogrammi sulla directory specificata come primo argomento
-		printf "\e[38;5;045mAnalisi di `realpath $1`\n\n\033[0m"
 		list=`find $1 -maxdepth 1 -not -type d`
 		if [ -n "$list" ];then
+			printf "\e[38;5;045mAnalisi di `realpath $1`\n\n\033[0m"
 			data_histogram
 			age_histogram
 		fi

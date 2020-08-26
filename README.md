@@ -22,7 +22,7 @@ $ ./fstats.sh -R <recursive> -s <data histogram> -a <age histogram> (-h <help>) 
 * -h: mostra help
 
 le prime tre opzioni possono essere combinate insieme.
-Se non specificate di default lo script stampa entrambi gli istogrammi, senza tener conto delle subdirectory, dei file in . oppure nella dir specificata come primo argomento
+Se non specificate di default lo script stampa entrambi gli istogrammi, senza tener conto delle subdirectory nella dir specificata come primo argomento
 
 ## Requisiti
 Script testato su Ubuntu 20.04.1, gnome-shell 3.36.1 e bash 5.0.17
