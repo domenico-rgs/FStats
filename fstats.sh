@@ -28,13 +28,13 @@ for x in $list
 		
 		if [[ $date_file -ge $midnight_date ]]; then #oggi
 			((age["oggi"]++));
-		elif [[ $date_file -ge $midnight_date-86400 && $date_file -lt $midnight_date ]]; then #ieri
+		elif [[ $date_file -ge $midnight_date-86400 ]]; then #ieri
 			((age["ieri"]++));
-		elif [[ $date_file -ge $midnight_date-604800 &&  $date_file -lt $midnight_date-86400 ]]; then #ultimi 7 giorni
+		elif [[ $date_file -ge $midnight_date-604800 ]]; then #ultimi 7 giorni
 			((age["ultima settimana"]++));
-		elif [[ $date_file -ge $midnight_date-18144000 && $date_file -lt $midnight_date-604800 ]]; then #ultimi 30 giorni
+		elif [[ $date_file -ge $midnight_date-18144000 ]]; then #ultimi 30 giorni
 			((age["ultimo mese"]++));
-		elif [[ $date_file -ge $midnight_date-31536000 && $date_file -lt $midnight_date-18144000 ]]; then #ultimo anno
+		elif [[ $date_file -ge $midnight_date-31536000 ]]; then #ultimo anno
 			((age["ultimo anno"]++));
 		else #vecchio
 			((age["vecchi"]++));
@@ -50,7 +50,7 @@ printf "\e[38;5;045mAnalisi dimensione\n\033[0m"
 printf "%-10s %-4s\n" "Dimensione" "Num."
 for x in  `echo ${!size[*]} | tr ' ' '\n' | sort -n | tr '\n' ' '` #itero su tutti gli indici del vettore che sono stati creati ordinando per dimensione crescente
 	do
-		printf "%-10s %-4s|" "${x}" "${size[$x]}" #-15s mi allinea | a 15 spazi di distanza dall'inizio del testo
+		printf "%-10s %-4s|" "${x}" "${size[$x]}"
 		for ((i=${size[$x]}; i>0; i--)) #itero per ogni elemento del vettore per stampare l'istogramma
 		do
 			printf "\e[38;5;045m#\033[0m"
